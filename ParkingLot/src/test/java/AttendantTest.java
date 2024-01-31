@@ -1,6 +1,7 @@
 import org.example.Car;
 import org.example.ParkingLot;
 import org.example.Attendant;
+import org.example.Strategy;
 import org.junit.jupiter.api.Test;
 
 
@@ -18,8 +19,8 @@ public class AttendantTest {
         ParkingLot parkingLot2 = new ParkingLot(3);
 
         // Act
-        attendant.addParkingLot(parkingLot1);
-        attendant.addParkingLot(parkingLot2);
+        attendant.assignParkingLot(parkingLot1);
+        attendant.assignParkingLot(parkingLot2);
 
         // Assert
         assertEquals(2, attendant.size());
@@ -33,8 +34,11 @@ public class AttendantTest {
         ParkingLot parkingLot1 = new ParkingLot(1); // Capacity 1
         ParkingLot parkingLot2 = new ParkingLot(1); // Capacity 1
         Attendant attendant = new Attendant();
-        attendant.addParkingLot(parkingLot1);
-        attendant.addParkingLot(parkingLot2);
+
+        Strategy parkingStrategy = new Strategy();
+        attendant.setParkingStrategy(parkingStrategy);
+        attendant.assignParkingLot(parkingLot1);
+        attendant.assignParkingLot(parkingLot2);
 
         // Act
         Car car1 = new Car("UP09HG1234", "Blue");
@@ -56,8 +60,8 @@ public class AttendantTest {
         ParkingLot parkingLot1 = mock(ParkingLot.class);
         ParkingLot parkingLot2 = mock(ParkingLot.class);
         Attendant attendant = new Attendant();
-        attendant.addParkingLot(parkingLot1);
-        attendant.addParkingLot(parkingLot2);
+        attendant.assignParkingLot(parkingLot1);
+        attendant.assignParkingLot(parkingLot2);
 
         Car car = new Car("UP78GH5578", "Red");
 
@@ -75,9 +79,10 @@ public class AttendantTest {
         ParkingLot parkingLot1 = new ParkingLot(1);
         ParkingLot parkingLot2 = new ParkingLot(1);
         Attendant attendant = new Attendant();
-
+        Strategy parkingStrategy = new Strategy();
+        attendant.setParkingStrategy(parkingStrategy);
         attendant.assignParkingLot(parkingLot1);
-        attendant.addParkingLot(parkingLot2);
+        attendant.assignParkingLot(parkingLot2);
 
         Car car1 = new Car("UP78GH5678", "Red");
         Car car2 = new Car("UP78HH5678", "Red");
@@ -87,6 +92,22 @@ public class AttendantTest {
 
         assertTrue(parkingLot1.isFull());
         assertTrue(parkingLot2.isFull());
+    }
+
+    @Test
+    public void testAbleToNotifyIfLotIsFull() {
+
+        ParkingLot parkingLot = new ParkingLot(1);
+        Attendant attendant = new Attendant();
+        attendant.assignParkingLot(parkingLot);
+
+        Strategy parkingStrategy = new Strategy();
+        attendant.setParkingStrategy(parkingStrategy);
+
+        attendant.parkCar(new Car("AB34GC1323", "Red"));
+
+
+        assertTrue(parkingStrategy.isLotFull());
     }
 
 }

@@ -6,15 +6,19 @@ import java.util.Objects;
 
 public class Attendant {
     private List<ParkingLot> parkingLots;
+    private Strategy strategy;
 
     public Attendant() {
         this.parkingLots = new ArrayList<>();
     }
 
-    public void addParkingLot(ParkingLot parkingLot) {
+    public void assignParkingLot(ParkingLot parkingLot) {
         parkingLots.add(parkingLot);
     }
 
+    public void setParkingStrategy(Strategy strategy) {
+        this.strategy = strategy;
+    }
     public int size() {
         return parkingLots.size();
     }
@@ -22,11 +26,14 @@ public class Attendant {
     public boolean contains(ParkingLot parkingLot) {
         return parkingLots.contains(parkingLot);
     }
-
     public String parkCar(Car car) {
         for (ParkingLot parkingLot : parkingLots) {
             try {
-                return parkingLot.parkCar(car);
+                String token = parkingLot.parkCar(car);
+                if (parkingLot.isFull()) {
+                    strategy.notifyLotFull();
+                }
+                return token;
             } catch (IllegalArgumentException ignored) {
                 // Continue to the next parking lot if the current one is full
             }
@@ -44,11 +51,6 @@ public class Attendant {
             }
         }
         System.out.println("Unable to unpark the car. Invalid token or car not found.");
-    }
-
-
-    public void assignParkingLot(ParkingLot parkingLot) {
-        parkingLots.add(parkingLot);
     }
 
     @Override
