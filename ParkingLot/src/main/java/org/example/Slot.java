@@ -1,70 +1,44 @@
 package org.example;
 
+
+
+import org.example.coustomException.CarNotFoundException;
+import org.example.coustomException.SlotIsOccupiedException;
+
 import java.util.Objects;
 import java.util.UUID;
 
 public class Slot {
-    private int slotNumber;
-    private Car parkedCar;
-    private String token;
+    private Car car;
+    private String id;
 
-    public Slot(int slotNumber) {
-        this.slotNumber = slotNumber;
-        this.parkedCar = null;
+    public boolean isFree() {
+        return this.car == null;
     }
 
-    public Slot(int slotNumber, Car parkedCar) {
-        this.slotNumber = slotNumber;
-        this.parkedCar = parkedCar;
-    }
-
-    public String parkCar(Car car) {
-        String generatedToken = UUID.randomUUID().toString();
-        if (this.parkedCar != null) {
-            throw new IllegalArgumentException("Parking slot is already filled.");
+    public String park(Car car) throws SlotIsOccupiedException {
+        if (!this.isFree()) {
+            throw new SlotIsOccupiedException("Car is already parked in this slot.");
         }
-
-        this.parkedCar = car;
-        this.token = generatedToken;
-        return token;
+        this.car = car;
+        this.id = UUID.randomUUID().toString();
+        return this.id;
     }
 
-    public void unPark(String token) {
-        if (this.parkedCar == null) {
-            throw new IllegalStateException("Cannot unPark from an empty slot.");
+    public Car unPark(String id) throws CarNotFoundException, UnsupportedOperationException {
+        if (this.isFree()) {
+            throw new CarNotFoundException("Slot is empty.");
         }
-        if (!Objects.equals(this.token, token)){
-            throw new IllegalArgumentException("Invalid Token");
+        if (!this.isValidId(id)) {
+            throw new UnsupportedOperationException("Don't have an authorization to unpark.");
         }
-        this.parkedCar = null;
-        this.token = null;
+        Car car = this.car;
+        this.car = null;
+        this.id = null;
+        return car;
     }
 
-
-    public boolean isOccupied() {
-        return parkedCar != null;
-    }
-
-    public boolean isCarPresent(Car car) {
-        return parkedCar != null && parkedCar.equals(car);
-    }
-
-    public boolean isCarWithColor(String color) {
-        return parkedCar != null && parkedCar.hasColor(color);
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Slot that = (Slot) o;
-        return slotNumber == that.slotNumber &&
-                Objects.equals(parkedCar, that.parkedCar);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(slotNumber, parkedCar);
+    public boolean isValidId(String id) {
+        return Objects.equals(this.id, id);
     }
 }

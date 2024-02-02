@@ -1,57 +1,27 @@
 package org.example;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
-public class Strategy {
-    private boolean isLotFull;
-    private boolean isLotAvailable;
-    private boolean isNearestFirst;
+public enum Strategy {
+    NEAREST(parkingLots -> parkingLots, slots -> slots.stream().filter(Slot::isFree).findFirst().orElse(null)),
+    FARTHEST(List::reversed, slots -> slots.stream().filter(Slot::isFree).reduce((first, second) -> second).orElse(null)),
+    DISTRIBUTED(parkingLots -> parkingLots.stream().sorted(Comparator.comparingInt(ParkingLot::emptySlotCount).reversed()).toList(),
+            slots -> slots.stream().filter(Slot::isFree).findFirst().orElse(null));
 
-    public Strategy() {
-        this.isLotFull = false;
-        this.isLotAvailable = true;
-        this.isNearestFirst = true;
+    private final Function<List<ParkingLot>, List<ParkingLot>> getParkingLots;
+    private final Function<List<Slot>, Slot> getSlot;
+    Strategy(Function<List<ParkingLot>, List<ParkingLot>> getParkingLots, Function<List<Slot>, Slot> getSlot) {
+        this.getParkingLots = getParkingLots;
+        this.getSlot = getSlot;
     }
 
-    public void notifyLotFull() {
-        isLotFull = true;
-        isLotAvailable = false;
-        System.out.println("Parking lot is full.");
+    public Slot getAvailableSlot(List<Slot> slots) {
+        return this.getSlot.apply(slots);
     }
 
-    public void notifyLotAvailable() {
-        isLotFull = false;
-        isLotAvailable = true;
-        System.out.println("Parking lot is available.");
-    }
-
-    public boolean isLotFull() {
-        return isLotFull;
-    }
-
-    public boolean isLotAvailable() {
-        return isLotAvailable;
-    }
-
-    public void switchParkingStrategy() {
-        isNearestFirst = !isNearestFirst;
-        String strategy = isNearestFirst ? "Nearest Slot First" : "Farthest Slot First";
-        System.out.println("Switched to " + strategy + " parking strategy.");
-    }
-
-    public boolean isNearestFirst() {
-        return isNearestFirst;
-    }
-
-    public int getTargetSlot(List<Slot> slots) {
-        // Implement logic to get the target slot based on the current strategy
-        // You can modify this method according to your parking strategy logic
-        // For example, return the nearest or farthest available slot index
-        if (isNearestFirst) {
-            // Implement nearest slot first logic
-        } else {
-            // Implement farthest slot first logic
-        }
-        return -1; // Replace with the actual slot index
+    public List<ParkingLot> getParkinglot(List<ParkingLot> parkingLots) {
+        return this.getParkingLots.apply(parkingLots);
     }
 }
