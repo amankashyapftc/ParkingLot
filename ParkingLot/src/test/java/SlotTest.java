@@ -1,78 +1,84 @@
 import org.example.Car;
 import org.example.Slot;
+import org.example.coustomException.CarNotFoundException;
+import org.example.coustomException.SlotIsOccupiedException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SlotTest {
     @Test
-    public void testAbleToParkCarInBlankSlot() {
-        Slot slot = new Slot(1);
-        Car car = new Car("UP78DJ3587", "Blue");
-        slot.parkCar(car);
-        assertEquals(slot, new Slot(1, car));
+    public void validParkingSlot() {
+        assertDoesNotThrow(Slot::new);
     }
 
     @Test
-    public void testWhileParkingParkCarReturnAToken() {
-        Slot slot = new Slot(1);
-        Car car = new Car("UP23GH1234","Red");
-        String token = slot.parkCar(car);
-        assertNotNull(token);
-    }
-    @Test
-    public void testIfYouParkInvalidCarItWillThrowError() {
-        Slot slot = new Slot(1);
-        assertThrows(IllegalArgumentException.class, () -> {
-            Car invalidCar = new Car("ABC123", "Black");
-            slot.parkCar(invalidCar);
-        });
+    public void isSlotAvailable() {
+        Slot slot = new Slot();
+
+        boolean actual = slot.isFree();
+        boolean expected = true;
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void testIfYouParkCarWithNullColorItWillThrowError() {
-        Slot slot = new Slot(1);
-        assertThrows(IllegalArgumentException.class, () -> {
-            Car invalidCar = new Car("UP78DJ3587", "");
-            slot.parkCar(invalidCar);
-        });
+    public void shouldParkCar() throws Exception {
+        Car car = new Car("UP78DJ5656", "Blue");
+        Slot slot = new Slot();
+
+        slot.park(car);
+
+        boolean actual = slot.isFree();
+        boolean expected = false;
+        assertEquals(expected, actual);
     }
 
     @Test
-    public void testIfYouParkCarInAlreadyFilledSlotShouldThrowAnError() {
-        Slot slot = new Slot(1);
-        Car firstCar = new Car("LK34GH6754", "Blue");
-        Car secondCar = new Car("UP30GT4532", "Red");
+    public void shouldNotParkCarInUnAvailableSlot() throws Exception {
+        Car car = new Car("UP78DJ5658", "Green");
+        Slot slot = new Slot();
+        slot.park(car);
+        Car car2 = new Car("UP78DJ5659", "Red");
 
-        slot.parkCar(firstCar);
-        assertThrows(IllegalArgumentException.class, () -> slot.parkCar(secondCar));
+        assertThrows(SlotIsOccupiedException.class, () -> slot.park(car2));
     }
 
     @Test
-    public void testCarIsPresentInSlotOrNot() {
-        Slot parkingSlot = new Slot(1);
-        Car car = new Car("UP78DJ3534", "Blue");
+    public void shouldUnParkTheCar() throws Exception {
+        Slot slot = new Slot();
+        Car car = new Car("UP78DJ5678", "Black");
+        String id = slot.park(car);
 
-        parkingSlot.parkCar(car);
+        Car unParkedCar = slot.unPark(id);
 
-        assertTrue(parkingSlot.isCarPresent(car));
+        assertEquals(car, unParkedCar);
     }
-
 
     @Test
-    public void testAbleToUnParkCarAfterVerifyingToken(){
-        Slot parkingSlot = new Slot(1);
-        Car car = new Car("AD23AS2345","Blue");
+    public void shouldNotUnParkCarFromEmptySlot() {
+        Slot slot = new Slot();
 
-
-        String token = parkingSlot.parkCar(car);
-
-        parkingSlot.unPark(token);
-        assertFalse(parkingSlot.isOccupied());
-
+        assertThrows(CarNotFoundException.class, () -> slot.unPark("abc"));
     }
 
+    @Test
+    public void shouldNotUnParkCarWithInValidId() throws Exception {
+        Slot slot = new Slot();
+        Car car = new Car("UP78DJ5356", "Yellow");
+        slot.park(car);
 
+        assertThrows(UnsupportedOperationException.class, () -> slot.unPark("abc"));
+    }
 
+    @Test
+    public void unParkTheInvalidCar() throws Exception {
+        Slot slot = new Slot();
+        Car car = new Car("UP89JK7654", "Blue");
+        Car car2 = new Car("UP78DJ5690", "Yellow");
+        String id = slot.park(car);
 
+        Car unParkedCar = slot.unPark(id);
+
+        assertNotEquals(car2, unParkedCar);
+    }
 }

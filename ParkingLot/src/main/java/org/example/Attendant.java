@@ -1,68 +1,61 @@
 package org.example;
 
+import org.example.coustomException.CarNotFoundException;
+import org.example.coustomException.SlotIsOccupiedException;
+import org.example.coustomException.SlotNotFoundException;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class Attendant {
-    private List<ParkingLot> parkingLots;
+public class Attendant implements Observer {
+    private final List<ParkingLot> parkingLots;
     private Strategy strategy;
 
-    public Attendant() {
+    public Attendant(Strategy... strategy) {
         this.parkingLots = new ArrayList<>();
+        this.strategy = strategy.length > 0 ? strategy[0]: Strategy.NEAREST;
     }
 
-    public void assignParkingLot(ParkingLot parkingLot) {
+    public void assign(ParkingLot parkingLot) {
         parkingLots.add(parkingLot);
+        NotificationBus.getInstance().subscribe(this, ParkingLotEvent.EMPTY);
     }
 
-    public void setParkingStrategy(Strategy strategy) {
-        this.strategy = strategy;
-    }
-    public int size() {
-        return parkingLots.size();
-    }
+    public String park(Car car) throws SlotNotFoundException {
+        List<ParkingLot> parkingLotsToIterate = strategy.getParkinglot(parkingLots);
 
-    public boolean contains(ParkingLot parkingLot) {
-        return parkingLots.contains(parkingLot);
-    }
-    public String parkCar(Car car) {
-        for (ParkingLot parkingLot : parkingLots) {
+        for (ParkingLot parkingLot: parkingLotsToIterate) {
             try {
-                String token = parkingLot.parkCar(car);
-                if (parkingLot.isFull()) {
-                    strategy.notifyLotFull();
+                String id = parkingLot.park(car, strategy);
+                if (id != null) {
+                    return id;
                 }
-                return token;
-            } catch (IllegalArgumentException ignored) {
-                // Continue to the next parking lot if the current one is full
+            }
+            catch (SlotNotFoundException | SlotIsOccupiedException ex) {
+                System.out.println(ex.getMessage() + " Trying other parking lot.");
             }
         }
-        throw new IllegalArgumentException("Unable to park the car. All parking lots are full.");
+
+        throw new SlotNotFoundException("All slots are occupied.");
     }
 
-    public void unPark(String token) {
-        for (ParkingLot parkingLot : parkingLots) {
+    public Car unPark(String id) throws CarNotFoundException {
+        for (ParkingLot parkingLot: parkingLots) {
             try {
-                parkingLot.unPark(token);
-                return; // Break once successfully unparked the car
-            } catch (IllegalArgumentException ignored) {
-                // Continue to the next parking lot if the token is invalid or the car is not found
+                Car car = parkingLot.unPark(id);
+                if (car != null) {
+                    return car;
+                }
+            }
+            catch (CarNotFoundException | SlotNotFoundException ex) {
+                System.out.println(ex.getMessage() + " Trying other parking lot.");
             }
         }
-        System.out.println("Unable to unpark the car. Invalid token or car not found.");
+
+        throw new CarNotFoundException("No car parked with this id.");
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Attendant that = (Attendant) o;
-        return Objects.equals(parkingLots, that.parkingLots);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(parkingLots);
+    public void changeStrategy(Strategy strategy) {
+        this.strategy = strategy;
     }
 }
